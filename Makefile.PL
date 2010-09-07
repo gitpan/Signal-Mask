@@ -8,7 +8,9 @@ WriteMakefile
           'PREREQ_PM' => {
                            'Const::Fast' => 0,
                            'IPC::Signal' => 0,
-                           'Test::More' => 0
+                           'Module::Build' => '0.28',
+                           'Test::More' => 0,
+                           'Thread::SigMask' => '0.002'
                          },
           'INSTALLDIRS' => 'site',
           'EXE_FILES' => [],

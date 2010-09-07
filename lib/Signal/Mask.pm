@@ -3,9 +3,10 @@ package Signal::Mask;
 use strict;
 use warnings FATAL => 'all';
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
-use POSIX qw/sigprocmask SIG_BLOCK SIG_UNBLOCK SIG_SETMASK/;
+use POSIX qw/SIG_BLOCK SIG_UNBLOCK SIG_SETMASK/;
+use Thread::SigMask 'sigmask';
 use IPC::Signal qw/sig_num sig_name/;
 use Carp qw/croak/;
 use Const::Fast;
@@ -14,11 +15,12 @@ our %SIG_MASK;
 
 sub import {
 	my ($class, $name) = @_;
-	$name ||= 'SIG_MASK';
-	$name =~ s/ \A % //xm;
-	my $caller = caller;
-	no strict 'refs';
-	*{"$caller\::$name"} = \%SIG_MASK;
+	if (defined $name) {
+		$name =~ s/ \A % //xm;
+		my $caller = caller;
+		no strict 'refs';
+		*{"$caller\::$name"} = \%SIG_MASK;
+	}
 	return;
 }
 
@@ -35,7 +37,7 @@ sub TIEHASH {
 sub _get_status {
 	my ($self, $num) = @_;
 	my $mask = POSIX::SigSet->new;
-	sigprocmask(SIG_BLOCK, undef, $mask);
+	sigmask(SIG_BLOCK, POSIX::SigSet->new(), $mask);
 	return $mask->ismember($num);
 }
 
@@ -48,7 +50,7 @@ sub _block_signal {
 	my ($self, $key) = @_;
 	my $num = sig_num($key);
 	croak "No such signal '$key'" if not defined $num;
-	sigprocmask(SIG_BLOCK, POSIX::SigSet->new($num)) or croak "Couldn't block signal: $!";
+	sigmask(SIG_BLOCK, POSIX::SigSet->new($num)) or croak "Couldn't block signal: $!";
 	return;
 }
 
@@ -56,7 +58,7 @@ sub _unblock_signal {
 	my ($self, $key) = @_;
 	my $num = sig_num($key);
 	croak "No such signal '$key'" if not defined $num;
-	sigprocmask(SIG_UNBLOCK, POSIX::SigSet->new($num)) or croak "Couldn't unblock signal: $!";
+	sigmask(SIG_UNBLOCK, POSIX::SigSet->new($num)) or croak "Couldn't unblock signal: $!";
 	return;
 }
 
@@ -79,7 +81,7 @@ sub DELETE {
 
 sub CLEAR {
 	my ($self) = @_;
-	sigprocmask(SIG_SETMASK, POSIX::SigSet->new());
+	sigmask(SIG_SETMASK, POSIX::SigSet->new());
 	return;
 }
 
@@ -96,13 +98,17 @@ sub FIRSTKEY {
 
 sub NEXTKEY {
 	my $self = shift;
-	if ($self->{iterator} < $sig_max) {
+	if ($self->{iterator} <= $sig_max) {
 		my $num = $self->{iterator}++;
 		return wantarray ? (sig_name($num) => $self->_get_status($num)) : sig_name($num);
 	}
 	else {
 		return;
 	}
+}
+
+sub SCALAR {
+	return $sig_max;
 }
 
 sub UNTIE {
@@ -120,27 +126,27 @@ __END__
 
 =head1 NAME
 
-Signal::Mask - Signal Masks made easy
+Signal::Mask - Signal masks made easy
 
 =head1 VERSION
 
-Version 0.001
+Version 0.002
 
 =head1 SYNOPSIS
 
 Signal::Mask is an abstraction around your process's signal mask. It is used to fetch and/or change the signal mask of the calling thread.  The signal mask is the set of signals whose delivery is currently blocked for the caller.
 
- use Signal::Mask;
+ use Signal::Mask 'SIG_MASK';
  
  {
      local $SIG_MASK{INT} = 1;
-	 do_something;
+     do_something();
  }
- #signal gets postponed until now
+ #signal delivery gets postponed until now
 
 =head1 EXPORT
 
-This module exports a B<HASH>. By default it's called %SIG_MASK, but it's name can be set on import. Any true value for a hash key will correspond with that signal being masked.
+When importation is given an argument, this module exports a B<HASH> by that name. It can also be accessed as %Signal::Mask::SIG_MASK. Any true value for a hash key will correspond with that signal being masked.
 
 =head1 AUTHOR
 
