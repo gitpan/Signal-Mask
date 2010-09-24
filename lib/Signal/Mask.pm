@@ -3,7 +3,7 @@ package Signal::Mask;
 use strict;
 use warnings FATAL => 'all';
 
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 
 use POSIX qw/SIG_BLOCK SIG_UNBLOCK SIG_SETMASK/;
 use Thread::SigMask 'sigmask';
@@ -108,7 +108,10 @@ sub NEXTKEY {
 }
 
 sub SCALAR {
-	return $sig_max;
+	my $self = shift;
+	my $mask = POSIX::SigSet->new;
+	sigmask(SIG_BLOCK, POSIX::SigSet->new(), $mask);
+	return scalar grep { $mask->ismember($_) } 1 .. $sig_max;
 }
 
 sub UNTIE {
@@ -130,11 +133,11 @@ Signal::Mask - Signal masks made easy
 
 =head1 VERSION
 
-Version 0.002
+Version 0.003
 
 =head1 SYNOPSIS
 
-Signal::Mask is an abstraction around your process's signal mask. It is used to fetch and/or change the signal mask of the calling thread.  The signal mask is the set of signals whose delivery is currently blocked for the caller.
+Signal::Mask is an abstraction around your process or thread signal mask. It is used to fetch and/or change the signal mask of the calling process or thread. The signal mask is the set of signals whose delivery is currently blocked for the caller.
 
  use Signal::Mask 'SIG_MASK';
  
@@ -146,7 +149,7 @@ Signal::Mask is an abstraction around your process's signal mask. It is used to 
 
 =head1 EXPORT
 
-When importation is given an argument, this module exports a B<HASH> by that name. It can also be accessed as %Signal::Mask::SIG_MASK. Any true value for a hash key will correspond with that signal being masked.
+When importation is given an argument, this module exports a B<HASH> by that name. It can also be accessed as %Signal::Mask::SIG_MASK. Any true value for a hash entry will correspond with that signal being masked.
 
 =head1 AUTHOR
 
