@@ -1,14 +1,16 @@
-Build.PL
 Changes
+LICENSE
+MANIFEST
+META.json
+META.yml
+Makefile.PL
+README
+SIGNATURE
+dist.ini
 lib/Signal/Mask.pm
 lib/Signal/Pending.pm
-LICENSE
-Makefile.PL
-MANIFEST
-META.yml
-README
-t/00-load.t
+t/00-compile.t
 t/10-basics.t
-t/pod-coverage.t
-t/pod.t
-SIGNATURE    Added here by Module::Build
+t/release-kwalitee.t
+t/release-pod-coverage.t
+t/release-pod-syntax.t

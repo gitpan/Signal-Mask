@@ -1,30 +1,30 @@
 ---
-name: Signal-Mask
-version: 0.004
+abstract: 'Signal masks made easy'
 author:
-  - 'Leon Timmermans <leont@cpan.org>'
-abstract: Signal masks made easy
-license: perl
-resources:
-  license: http://dev.perl.org/licenses/
+  - 'Leon Timmermans <fawaka@gmail.com>'
 build_requires:
-  Module::Build: 0.28
+  File::Find: 0
+  File::Temp: 0
   Test::More: 0
-requires:
-  Const::Fast: 0
-  IPC::Signal: 0
-  Thread::SigMask: 0.002
-  perl: 5.006
+  YAML: 0
 configure_requires:
-  Module::Build: 0.28
-provides:
-  Signal::Mask:
-    file: lib/Signal/Mask.pm
-    version: 0.004
-  Signal::Pending:
-    file: lib/Signal/Pending.pm
-    version: 0.004
-generated_by: Module::Build version 0.340201
+  ExtUtils::MakeMaker: 6.31
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.200000, CPAN::Meta::Converter version 2.101670'
+license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
+name: Signal-Mask
+requires:
+  Carp: 0
+  Config: 0
+  Const::Fast: 0
+  IPC::Signal: 0
+  POSIX: 0
+  Thread::SigMask: 0
+  perl: 5.006
+resources:
+  bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=Signal-Mask
+  repository: git://github.com/Leont/signal-mask.git
+version: 0.005

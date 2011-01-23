@@ -1,32 +1,21 @@
 package Signal::Mask;
+BEGIN {
+  $Signal::Mask::VERSION = '0.005';
+}
 
 use strict;
 use warnings FATAL => 'all';
 
-our $VERSION = '0.004';
-
+use Config;
 use POSIX qw/SIG_BLOCK SIG_UNBLOCK SIG_SETMASK/;
 use Thread::SigMask 'sigmask';
 use IPC::Signal qw/sig_num sig_name/;
 use Carp qw/croak/;
 use Const::Fast;
 
-our %SIG_MASK;
+const my $sig_max => $Config{sig_count} - 1;
 
-sub import {
-	my ($class, $name) = @_;
-	if (defined $name) {
-		$name =~ s/ \A % //xm;
-		my $caller = caller;
-		no strict 'refs';
-		*{"$caller\::$name"} = \%SIG_MASK;
-	}
-	return;
-}
-
-const my $sig_max => defined &POSIX::SIGRTMAX ? &POSIX::SIGRTMAX : 32;
-
-tie %SIG_MASK, __PACKAGE__;
+tie %Signal::Mask, __PACKAGE__;
 
 sub TIEHASH {
 	my $class = shift;
@@ -46,37 +35,34 @@ sub FETCH {
 	return $self->_get_status(sig_num($key));
 }
 
-sub _block_signal {
+my $block_signal = sub {
 	my ($self, $key) = @_;
 	my $num = sig_num($key);
 	croak "No such signal '$key'" if not defined $num;
-	sigmask(SIG_BLOCK, POSIX::SigSet->new($num)) or croak "Couldn't block signal: $!";
-	return;
-}
+	my $ret = POSIX::SigSet->new($num);
+	sigmask(SIG_BLOCK, POSIX::SigSet->new($num), $ret) or croak "Couldn't block signal: $!";
+	return $ret->ismember($ret);
+};
 
-sub _unblock_signal {
+my $unblock_signal = sub {
 	my ($self, $key) = @_;
 	my $num = sig_num($key);
 	croak "No such signal '$key'" if not defined $num;
-	sigmask(SIG_UNBLOCK, POSIX::SigSet->new($num)) or croak "Couldn't unblock signal: $!";
-	return;
-}
+	my $ret = POSIX::SigSet->new($num);
+	sigmask(SIG_UNBLOCK, POSIX::SigSet->new($num), $ret) or croak "Couldn't unblock signal: $!";
+	return $ret->ismember($ret);
+};
 
 sub STORE {
 	my ($self, $key, $value) = @_;
-	if ($value) {
-		$self->_block_signal($key);
-	}
-	else {
-		$self->_unblock_signal($key);
-	}
+	my $method = $value ? $block_signal : $unblock_signal;
+	$self->$method($key);
 	return;
 }
 
 sub DELETE {
 	my ($self, $key) = @_;
-	$self->STORE($key, 0);
-	return;
+	return $self->$unblock_signal($key);
 }
 
 sub CLEAR {
@@ -125,7 +111,11 @@ sub DESTROY {
 
 1;    # End of Signal::Mask
 
-__END__
+# ABSTRACT: Signal masks made easy
+
+
+
+=pod
 
 =head1 NAME
 
@@ -133,70 +123,35 @@ Signal::Mask - Signal masks made easy
 
 =head1 VERSION
 
-Version 0.004
+version 0.005
 
 =head1 SYNOPSIS
 
-Signal::Mask is an abstraction around your process or thread signal mask. It is used to fetch and/or change the signal mask of the calling process or thread. The signal mask is the set of signals whose delivery is currently blocked for the caller.
+Signal::Mask is an abstraction around your process or thread signal mask. It is used to fetch and/or change the signal mask of the calling process or thread. The signal mask is the set of signals whose delivery is currently blocked for the caller. It is available as the global hash %Signal::Mask.
 
- use Signal::Mask 'SIG_MASK';
+ use Signal::Mask;
  
  {
-     local $SIG_MASK{INT} = 1;
+     local $Signal::Mask{INT} = 1;
      do_something();
  }
  #signal delivery gets postponed until now
 
-=head1 EXPORT
-
-When importation is given an argument, this module exports a B<HASH> by that name. It can also be accessed as %Signal::Mask::SIG_MASK. Any true value for a hash entry will correspond with that signal being masked.
+=for Pod::Coverage SCALAR
 
 =head1 AUTHOR
 
-Leon Timmermans, C<< <leont at cpan.org> >>
+Leon Timmermans <fawaka@gmail.com>
 
-=head1 BUGS
+=head1 COPYRIGHT AND LICENSE
 
-Please report any bugs or feature requests to C<bug-signal-mask at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Signal-Mask>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+This software is copyright (c) 2010 by Leon Timmermans.
 
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Signal::Mask
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Signal-Mask>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Signal-Mask>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Signal-Mask>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Signal-Mask/>
-
-=back
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2010 Leon Timmermans.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
+
+
+__END__
+

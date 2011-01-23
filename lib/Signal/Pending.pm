@@ -1,31 +1,20 @@
 package Signal::Pending;
+BEGIN {
+  $Signal::Pending::VERSION = '0.005';
+}
 
 use strict;
 use warnings FATAL => 'all';
 
-our $VERSION = '0.004';
-
+use Config;
 use POSIX qw/sigpending/;
 use IPC::Signal qw/sig_num sig_name/;
 use Carp qw/croak/;
 use Const::Fast;
 
-our %SIG_PENDING;
+const my $sig_max => $Config{sig_count} - 1;
 
-sub import {
-	my ($class, $name) = @_;
-	if (defined $name) {
-		$name =~ s/ \A % //xm;
-		my $caller = caller;
-		no strict 'refs';
-		*{"$caller\::$name"} = \%SIG_PENDING;
-	}
-	return;
-}
-
-const my $sig_max => defined &POSIX::SIGRTMAX ? &POSIX::SIGRTMAX : 32;
-
-tie %SIG_PENDING, __PACKAGE__;
+tie %Signal::Pending, __PACKAGE__;
 
 sub TIEHASH {
 	my $class = shift;
@@ -97,7 +86,11 @@ sub DESTROY {
 
 1;    # End of Signal::Mask
 
-__END__
+# ABSTRACT: Signal pending status made easy
+
+
+
+=pod
 
 =head1 NAME
 
@@ -105,73 +98,38 @@ Signal::Pending - Signal pending status made easy
 
 =head1 VERSION
 
-Version 0.004
+version 0.005
 
 =head1 SYNOPSIS
 
-Signal::Pending is an abstraction around your process'/thread's pending signals. It can be used in combination with signal masks to handle signals in a controlled manner.
+Signal::Pending is an abstraction around your process'/thread's pending signals. It can be used in combination with signal masks to handle signals in a controlled manner. The set of pending signals is available as the global hash %Signal::Pending.
 
- use Signal::Mask 'SIG_MASK';
- use Signal::Pending 'SIG_PENDING';
+ use Signal::Mask;
+ use Signal::Pending;
  
  {
-     local $SIG_MASK{INT} = 1;
+     local $Signal::Mask{INT} = 1;
      do {
 		 something();
-     } while (not $SIG_PENDING{INT})
+     } while (not $Signal::Pending{INT})
  }
  #signal delivery gets postponed until now
 
-=head1 EXPORT
-
-When importation is given an argument, this module exports a B<HASH> by that name. It can also be accessed as %Signal::Pending::SIG_PENDING. Any true value for a hash entry will correspond with that signal awaiting being handled.
+=for Pod::Coverage SCALAR
 
 =head1 AUTHOR
 
-Leon Timmermans, C<< <leont at cpan.org> >>
+Leon Timmermans <fawaka@gmail.com>
 
-=head1 BUGS
+=head1 COPYRIGHT AND LICENSE
 
-Please report any bugs or feature requests to C<bug-signal-mask at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Signal-Mask>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+This software is copyright (c) 2010 by Leon Timmermans.
 
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Signal::Pending
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Signal-Mask>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Signal-Mask>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Signal-Mask>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Signal-Mask/>
-
-=back
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2010 Leon Timmermans.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
+
+
+__END__
+
