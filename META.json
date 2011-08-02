@@ -4,7 +4,7 @@
       "Leon Timmermans <fawaka@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.200000, CPAN::Meta::Converter version 2.101670",
+   "generated_by" : "Dist::Zilla version 4.200008, CPAN::Meta::Converter version 2.110440",
    "license" : [
       "perl_5"
    ],
@@ -16,7 +16,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "6.31"
+            "ExtUtils::MakeMaker" : "6.30"
          }
       },
       "runtime" : {
@@ -34,8 +34,7 @@
          "requires" : {
             "File::Find" : 0,
             "File::Temp" : 0,
-            "Test::More" : 0,
-            "YAML" : 0
+            "Test::More" : 0
          }
       }
    },
@@ -51,6 +50,6 @@
          "web" : "http://github.com/Leont/signal-mask"
       }
    },
-   "version" : "0.005"
+   "version" : "0.006"
 }
 

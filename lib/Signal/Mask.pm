@@ -1,6 +1,6 @@
 package Signal::Mask;
 BEGIN {
-  $Signal::Mask::VERSION = '0.005';
+  $Signal::Mask::VERSION = '0.006';
 }
 
 use strict;
@@ -123,7 +123,7 @@ Signal::Mask - Signal masks made easy
 
 =head1 VERSION
 
-version 0.005
+version 0.006
 
 =head1 SYNOPSIS
 
