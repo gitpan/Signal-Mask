@@ -1,8 +1,5 @@
 package Signal::Mask;
-BEGIN {
-  $Signal::Mask::VERSION = '0.006';
-}
-
+$Signal::Mask::VERSION = '0.007';
 use strict;
 use warnings FATAL => 'all';
 
@@ -11,9 +8,8 @@ use POSIX qw/SIG_BLOCK SIG_UNBLOCK SIG_SETMASK/;
 use Thread::SigMask 'sigmask';
 use IPC::Signal qw/sig_num sig_name/;
 use Carp qw/croak/;
-use Const::Fast;
 
-const my $sig_max => $Config{sig_count} - 1;
+my $sig_max = $Config{sig_count} - 1;
 
 tie %Signal::Mask, __PACKAGE__;
 
@@ -113,9 +109,11 @@ sub DESTROY {
 
 # ABSTRACT: Signal masks made easy
 
-
+__END__
 
 =pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -123,11 +121,9 @@ Signal::Mask - Signal masks made easy
 
 =head1 VERSION
 
-version 0.006
+version 0.007
 
 =head1 SYNOPSIS
-
-Signal::Mask is an abstraction around your process or thread signal mask. It is used to fetch and/or change the signal mask of the calling process or thread. The signal mask is the set of signals whose delivery is currently blocked for the caller. It is available as the global hash %Signal::Mask.
 
  use Signal::Mask;
  
@@ -136,6 +132,10 @@ Signal::Mask is an abstraction around your process or thread signal mask. It is 
      do_something();
  }
  #signal delivery gets postponed until now
+
+=head1 DESCRIPTION
+
+Signal::Mask is an abstraction around your process or thread signal mask. It is used to fetch and/or change the signal mask of the calling process or thread. The signal mask is the set of signals whose delivery is currently blocked for the caller. It is available as the global hash %Signal::Mask.
 
 =for Pod::Coverage SCALAR
 
@@ -151,7 +151,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-__END__
-

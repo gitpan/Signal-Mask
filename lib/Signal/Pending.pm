@@ -1,8 +1,5 @@
 package Signal::Pending;
-BEGIN {
-  $Signal::Pending::VERSION = '0.006';
-}
-
+$Signal::Pending::VERSION = '0.007';
 use strict;
 use warnings FATAL => 'all';
 
@@ -10,9 +7,8 @@ use Config;
 use POSIX qw/sigpending/;
 use IPC::Signal qw/sig_num sig_name/;
 use Carp qw/croak/;
-use Const::Fast;
 
-const my $sig_max => $Config{sig_count} - 1;
+my $sig_max = $Config{sig_count} - 1;
 
 tie %Signal::Pending, __PACKAGE__;
 
@@ -36,17 +32,17 @@ sub FETCH {
 
 sub STORE {
 	my ($self, $key, $value) = @_;
-	croak 'Can\'t assign to %SIG_PENDING';
+	croak 'Can\'t assign to %Signal::Pending';
 }
 
 sub DELETE {
 	my ($self, $key) = @_;
-	croak 'Can\'t delete from %SIG_PENDING';
+	croak 'Can\'t delete from %Signal::Pending';
 }
 
 sub CLEAR {
 	my ($self) = @_;
-	croak 'Can\'t clear %SIG_PENDING';
+	croak 'Can\'t clear %Signal::Pending';
 }
 
 sub EXISTS {
@@ -88,9 +84,11 @@ sub DESTROY {
 
 # ABSTRACT: Signal pending status made easy
 
-
+__END__
 
 =pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -98,11 +96,9 @@ Signal::Pending - Signal pending status made easy
 
 =head1 VERSION
 
-version 0.006
+version 0.007
 
 =head1 SYNOPSIS
-
-Signal::Pending is an abstraction around your process'/thread's pending signals. It can be used in combination with signal masks to handle signals in a controlled manner. The set of pending signals is available as the global hash %Signal::Pending.
 
  use Signal::Mask;
  use Signal::Pending;
@@ -114,6 +110,10 @@ Signal::Pending is an abstraction around your process'/thread's pending signals.
      } while (not $Signal::Pending{INT})
  }
  #signal delivery gets postponed until now
+
+=head1 DESCRIPTION
+
+Signal::Pending is an abstraction around your process'/thread's pending signals. It can be used in combination with signal masks to handle signals in a controlled manner. The set of pending signals is available as the global hash %Signal::Pending.
 
 =for Pod::Coverage SCALAR
 
@@ -129,7 +129,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-__END__
-
