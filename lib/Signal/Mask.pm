@@ -1,11 +1,19 @@
 package Signal::Mask;
-$Signal::Mask::VERSION = '0.007';
+$Signal::Mask::VERSION = '0.008';
 use strict;
 use warnings FATAL => 'all';
 
 use Config;
 use POSIX qw/SIG_BLOCK SIG_UNBLOCK SIG_SETMASK/;
-use Thread::SigMask 'sigmask';
+BEGIN {
+	if (eval { require Thread::SigMask }) {
+		*sigmask = \&Thread::SigMask::sigmask;
+	}
+	else {
+		require POSIX;
+		*sigmask = \&POSIX::sigprocmask;
+	}
+}
 use IPC::Signal qw/sig_num sig_name/;
 use Carp qw/croak/;
 
@@ -35,9 +43,8 @@ my $block_signal = sub {
 	my ($self, $key) = @_;
 	my $num = sig_num($key);
 	croak "No such signal '$key'" if not defined $num;
-	my $ret = POSIX::SigSet->new($num);
-	sigmask(SIG_BLOCK, POSIX::SigSet->new($num), $ret) or croak "Couldn't block signal: $!";
-	return $ret->ismember($ret);
+	sigmask(SIG_BLOCK, POSIX::SigSet->new($num)) or croak "Couldn't block signal: $!";
+	return;
 };
 
 my $unblock_signal = sub {
@@ -46,7 +53,7 @@ my $unblock_signal = sub {
 	croak "No such signal '$key'" if not defined $num;
 	my $ret = POSIX::SigSet->new($num);
 	sigmask(SIG_UNBLOCK, POSIX::SigSet->new($num), $ret) or croak "Couldn't unblock signal: $!";
-	return $ret->ismember($ret);
+	return $ret->ismember($num);
 };
 
 sub STORE {
@@ -121,7 +128,7 @@ Signal::Mask - Signal masks made easy
 
 =head1 VERSION
 
-version 0.007
+version 0.008
 
 =head1 SYNOPSIS
 
@@ -136,8 +143,6 @@ version 0.007
 =head1 DESCRIPTION
 
 Signal::Mask is an abstraction around your process or thread signal mask. It is used to fetch and/or change the signal mask of the calling process or thread. The signal mask is the set of signals whose delivery is currently blocked for the caller. It is available as the global hash %Signal::Mask.
-
-=for Pod::Coverage SCALAR
 
 =head1 AUTHOR
 

@@ -1,5 +1,5 @@
 package Signal::Pending;
-$Signal::Pending::VERSION = '0.007';
+$Signal::Pending::VERSION = '0.008';
 use strict;
 use warnings FATAL => 'all';
 
@@ -96,7 +96,7 @@ Signal::Pending - Signal pending status made easy
 
 =head1 VERSION
 
-version 0.007
+version 0.008
 
 =head1 SYNOPSIS
 
